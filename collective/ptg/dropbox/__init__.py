@@ -17,22 +17,23 @@ from zope.i18nmessageid import MessageFactory
 
 _ = MessageFactory('collective.ptg.dropbox')
 
-# XXX Fill in your consumer key and secret below
-# You can find these at http://www.dropbox.com/developers/apps
-APP_KEY = ' '
-APP_SECRET = ' '
-ACCESS_TYPE = 'app_folder'  # should be 'dropbox' or 'app_folder' as configured for your app
 
 
-
-
-#import cmd
-#import locale
-#import os
-#import pprint
-#import shlex
-
+# Include the Dropbox SDK libraries
 from dropbox import client, rest, session
+
+
+# Get your app key and secret from the Dropbox developer website
+APP_KEY = ' '
+APP_SECRET = '  '
+
+# ACCESS_TYPE should be 'dropbox' or 'app_folder' as configured for your app
+ACCESS_TYPE = 'dropbox'
+sess = session.DropboxSession(APP_KEY, APP_SECRET, ACCESS_TYPE)
+
+#url = sess.build_authorize_url(request_token)
+client = client.DropboxClient(sess)
+
 
 
 def add_condition():
@@ -45,6 +46,9 @@ class IDropboxAdapter(IGalleryAdapter):
     """
 
     dropbox = Attribute("returns a dropbox object for the ap key")
+
+
+    
 
 
  
