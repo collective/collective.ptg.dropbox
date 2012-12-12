@@ -26,14 +26,17 @@ ACCESS_TYPE = 'app_folder'  # should be 'dropbox' or 'app_folder' as configured 
 
 
 
-import cmd
-import locale
-import os
-import pprint
-import shlex
+#import cmd
+#import locale
+#import os
+#import pprint
+#import shlex
 
 from dropbox import client, rest, session
 
+
+def add_condition():
+    return True
    
 
 class IDropboxAdapter(IGalleryAdapter):
@@ -49,11 +52,14 @@ class IDropboxAdapter(IGalleryAdapter):
     def get_mini_photo_url(photo):
         """
         takes a photo and creates the thumbnail photo url
+        I think this is 178x178 pixels
         """
 
     def get_photo_link(photo):
         """
         creates the photo link url
+        something like:
+        https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h/Costa%20Rican%20Frog.jpg
         """
 
     def get_large_photo_url(photo):
@@ -118,7 +124,7 @@ class DropboxAdapter(BaseAdapter):
             'image_url': self.get_large_photo_url(image),
             'thumb_url': self.get_mini_photo_url(image),
             'link': self.get_photo_link(image),
-            'title': image.get('title'),
+            'title': "image.get('title')",
             'description': "",
             'bodytext': ""
         }
@@ -126,35 +132,25 @@ class DropboxAdapter(BaseAdapter):
  
 
     def get_mini_photo_url(self, photo):
-        return "http://XXXXXXXXXXXXXXX/%s/%s_%s_s.jpg" % (
-            photo.get('farm'),
-            photo.get('server'),
-            photo.get('id'),
-            photo.get('secret'),
-        )
+        return "https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h/Costa%20Rican%20Frog.jpg"
 
     def get_photo_link(self, photo):
-        return "http://www.dropbox.comXXXXXXXXXXXXXXXs/%s/%s/sizes/o/" % (
-            photo.get('id')
-        )
+        return "https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h/Costa%20Rican%20Frog.jpg"
 
     def get_large_photo_url(self, photo):
-        return "http://XXXXXXXXXXXXXXXXXXX/%s/%s_%s%s.jpg" % (
-            photo.get('farm'),
-            photo.get('server'),
-            photo.get('id'),
-            photo.get('secret'),
-            self.sizes['dropbox'][self.settings.size]
-        )
+        return "https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h/Costa%20Rican%20Frog.jpg"
 
     @property
     def dropbox(self):
         return  DropboxAPI(API_KEY)
 
     def retrieve_images(self):
-        
-
-
-
-            
+        try:
+            images = [self.assemble_image_information(i)
+                for i in ['1', '2', 'need to get images from dropbox']]
+            print images
+            return images
+        except Exception, inst:
+            self.log_error(Exception, inst, "Error getting all images")
+            return []
             
