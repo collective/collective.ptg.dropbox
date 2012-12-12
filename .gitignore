@@ -1,0 +1,5 @@
+.DS_Store
+
+*.pyc
+
+collective.ptg.dropbox.egg-info
