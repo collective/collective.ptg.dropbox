@@ -31,6 +31,11 @@ setup(name='collective.ptg.dropbox',
           'setuptools',
           'plone.app.z3cform',
           'dropbox',
+          'mechanize', 
+          'nose', 
+          'oauth', 
+          'poster', 
+          'simplejson',
           'collective.plonetruegallery'
       ],
       entry_points="""
