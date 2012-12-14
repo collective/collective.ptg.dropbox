@@ -27,11 +27,6 @@ import urllib2, urllib, commands, dircache, os, struct, time
 
 import webbrowser
 import pickle
-import os, shutil, datetime, time, sys
-from oauth import oauth
-#import oauth.oauth as oauth
-from datetime import datetime, timedelta
-
 
 
 # Get your app key and secret from the Dropbox developer website
@@ -160,17 +155,12 @@ class DropboxAdapter(BaseAdapter):
     def retrieve_images(self):
         """list files in remote directory"""
         
-        #sess = StoredSession('l8fqxygy25xq7jq', 'otpc22qrc0gy7mc', access_type='dropbox')
-        sess = session.DropboxSession(APP_KEY, APP_SECRET, ACCESS_TYPE)
-        dir_sep = "/"
+        dropbox_client = get_client()
         
-        request_token = sess.obtain_request_token()
-        url = sess.build_authorize_url(request_token)
-        access_token = sess.obtain_access_token(request_token)
+        #resp = client.metadata(self.current_path)
+        path = dropbox_client.metadata(self.current_path)
         
-        resp = client.metadata(self.current_path)
-        
-        path='https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h'
+        #path='https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h'
         
         meta = client.metadata(path)
         filelist = []
@@ -185,8 +175,7 @@ class DropboxAdapter(BaseAdapter):
         
         
     def get_request_token():
-	    console.clear()
-        print 'Getting request token...'	
+        console.clear()
         sess = session.DropboxSession(app_key, app_secret, access_type)
         request_token = sess.obtain_request_token()
         url = sess.build_authorize_url(request_token)
@@ -216,10 +205,10 @@ class DropboxAdapter(BaseAdapter):
     def call(self):
         # Demo if started run as a script...
         # Just print the account info to verify that the authentication worked:
-        print 'Getting account info...'
+        #print 'Getting account info...'
         dropbox_client = get_client()
         account_info = dropbox_client.account_info()
-        print 'linked account:', account_info
+        #print 'linked account:', account_info
      
             
     
