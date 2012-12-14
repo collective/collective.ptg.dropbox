@@ -25,10 +25,18 @@ from dropbox import client, rest, session
 # Might need some of these, not sure yet
 import urllib2, urllib, commands, dircache, os, struct, time
 
+import webbrowser
+import pickle
+import os, shutil, datetime, time, sys
+from oauth import oauth
+#import oauth.oauth as oauth
+from datetime import datetime, timedelta
+
+
 
 # Get your app key and secret from the Dropbox developer website
-APP_KEY = 'l 
-APP_SECRET = 'otpc2 '
+APP_KEY = 'l8fqxygy25xq7jq'
+APP_SECRET = 'otpc22qrc0gy7mc'
 
 # ACCESS_TYPE should be 'dropbox' or 'app_folder' as configured for your app
 ACCESS_TYPE = 'dropbox'
@@ -47,11 +55,7 @@ class IDropboxAdapter(IGalleryAdapter):
     dropbox = Attribute("returns a dropbox object for the ap key")
 
 
-    
-
-
- 
-
+  
     def get_mini_photo_url(photo):
         """
         takes a photo and creates the thumbnail photo url
@@ -127,7 +131,7 @@ class DropboxAdapter(BaseAdapter):
             'large': '_b'
         }
     }
-
+    
     def assemble_image_information(self, image):
         return {
             'image_url': self.get_large_photo_url(image),
@@ -156,99 +160,68 @@ class DropboxAdapter(BaseAdapter):
     def retrieve_images(self):
         """list files in remote directory"""
         
-        #self.sess = StoredSession('l8fqxygy25xq7jq', 'otpc22qrc0gy7mc', access_type='dropbox')
-        #self.api_client = self.client.DropboxClient(self.sess)
-        #self.current_path = ''
-        #self.prompt = "Dropbox> "
-
-        #self.sess.load_creds()
+        #sess = StoredSession('l8fqxygy25xq7jq', 'otpc22qrc0gy7mc', access_type='dropbox')
+        sess = session.DropboxSession(APP_KEY, APP_SECRET, ACCESS_TYPE)
+        dir_sep = "/"
+        
+        request_token = sess.obtain_request_token()
+        url = sess.build_authorize_url(request_token)
+        access_token = sess.obtain_access_token(request_token)
+        
+        resp = client.metadata(self.current_path)
         
         path='https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h'
-        resp = 'list(path)'
         
-        myfiles = ['1', '2']
-        if 'contents' in resp:
-            for f in resp['contents']:
-                #name = os.path.basename(f['path'])
-                #encoding = locale.getdefaultlocale()[1]
-                #self.stdout.write(('%s\n' % name).encode(encoding))
-                name = f['path']
-                myfiles.append(name)
- 
-        import pdb; pdb.set_trace()
-        try:
-            images = [self.assemble_image_information(i)
-                for i in myfiles]
-            return images
-        except Exception, inst:
-            self.log_error(Exception, inst, "Error getting all images")
-            return []
+        meta = client.metadata(path)
+        filelist = []
+
+        for item in meta['contents']:
+			if item['is_dir']:
+				filelist += self._listfiles(client,item['path'])
+			else:
+				filelist.append(item['path'])
             
-    def do_ls(self):
-        """list files in remote directory"""
-        
-        self.sess = StoredSession('l8fqxygy25xq7jq', 'otpc22qrc0gy7mc', access_type='dropbox')
-        self.api_client = client.DropboxClient(self.sess)
-        self.current_path = ''
-        self.prompt = "Dropbox> "
-
-        self.sess.load_creds()
+        return filelist
         
         
-        resp = self.api_client.metadata(self.current_path)
-        
-        myfiles = ['1', '2']
-        if 'contents' in resp:
-            for f in resp['contents']:
-                #name = os.path.basename(f['path'])
-                #encoding = locale.getdefaultlocale()[1]
-                #self.stdout.write(('%s\n' % name).encode(encoding))
-                name = f['path']
-                myfiles.append(name)
-        return myfiles
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-class StoredSession(session.DropboxSession):
-    """a wrapper around DropboxSession that stores a token to a file on disk"""
-    TOKEN_FILE = "token_store.txt"
-
-    def load_creds(self):
-        try:
-            stored_creds = open(self.TOKEN_FILE).read()
-            self.set_token(*stored_creds.split('|'))
-            print "[loaded access token]"
-        except IOError:
-            pass # don't worry if it's not there
-
-    def write_creds(self, token):
-        f = open(self.TOKEN_FILE, 'w')
-        f.write("|".join([token.key, token.secret]))
-        f.close()
-
-    def delete_creds(self):
-        os.unlink(self.TOKEN_FILE)
-
-    def link(self):
-        request_token = self.obtain_request_token()
-        url = self.build_authorize_url(request_token)
-        print "url:", url
-        print "Please authorize in the browser. After you're done, press enter."
-        raw_input()
-
-        self.obtain_access_token(request_token)
-        self.write_creds(self.token)
-
-    def unlink(self):
-        self.delete_creds()
-        session.DropboxSession.unlink(self)
+    def get_request_token():
+	    console.clear()
+        print 'Getting request token...'	
+        sess = session.DropboxSession(app_key, app_secret, access_type)
+        request_token = sess.obtain_request_token()
+        url = sess.build_authorize_url(request_token)
+        console.clear()
+        webbrowser.open(url, modal=True)
+        return request_token
+     
+    def get_access_token():
+        token_str = keychain.get_password('dropbox', app_key)
+        if token_str:
+            key, secret = pickle.loads(token_str)
+            return session.OAuthToken(key, secret)
+        request_token = get_request_token()
+        sess = session.DropboxSession(app_key, app_secret, access_type)
+        access_token = sess.obtain_access_token(request_token)
+        token_str = pickle.dumps((access_token.key, access_token.secret))
+        keychain.set_password('dropbox', app_key, token_str)
+        return access_token
+     
+    def get_client():
+        access_token = get_access_token()
+        sess = session.DropboxSession(app_key, app_secret, access_type)
+        sess.set_token(access_token.key, access_token.secret)
+        dropbox_client = client.DropboxClient(sess)
+        return dropbox_client
+     
+    def call(self):
+        # Demo if started run as a script...
+        # Just print the account info to verify that the authentication worked:
+        print 'Getting account info...'
+        dropbox_client = get_client()
+        account_info = dropbox_client.account_info()
+        print 'linked account:', account_info
+     
+            
+    
+            
+     
