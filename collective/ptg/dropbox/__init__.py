@@ -23,15 +23,30 @@ _ = MessageFactory('collective.ptg.dropbox')
 from dropbox import client, rest, session
 
 # Might need some of these, not sure yet
-import urllib2, urllib, commands, dircache, os, struct, time, keychain
+import urllib2, urllib, commands, dircache, os, struct, time
 
 import webbrowser
 import pickle
 
+import sys
+import os
+import time
+import locale
+from optparse import OptionParser
+
+import re
+import os.path
+
+import logging
+
+from urllib import urlencode, quote
+import urllib2
+import cookielib
+
 
 # Get your app key and secret from the Dropbox developer website
-APP_KEY = 'l8fqxygy25xq7jq'
-APP_SECRET = 'otpc22qrc0gy7mc'
+APP_KEY = 'l8f7jq'
+APP_SECRET = 'otpgy7mc'
 
 # ACCESS_TYPE should be 'dropbox' or 'app_folder' as configured for your app
 ACCESS_TYPE = 'dropbox'
@@ -97,6 +112,15 @@ class IDropboxGallerySettings(IBaseSettings):
 
 class DropboxAdapter(BaseAdapter):
     implements(IDropboxAdapter, IGalleryAdapter)
+    
+    urlbase = 'https://www.dropbox.com/'
+    dlbase = 'https://dl-web.dropbox.com/'
+    
+    db_uid = None
+    db_token = None
+
+
+
 
     schema = IDropboxGallerySettings
     name = u"dropbox"
@@ -155,10 +179,10 @@ class DropboxAdapter(BaseAdapter):
     def retrieve_images(self):
         """list files in remote directory"""
         
-        dropbox_client = self.get_client()
+        dropbox_client = self.theclient()
         
         #resp = client.metadata(self.current_path)
-        path = dropbox_client.metadata(self.current_path)
+        path = dropbox_client.metadata(path='https://www.dropbox.com/')
         
         #path='https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h'
         
@@ -209,8 +233,38 @@ class DropboxAdapter(BaseAdapter):
         dropbox_client = get_client()
         account_info = dropbox_client.account_info()
         #print 'linked account:', account_info
-     
-            
+        
+        
     
-            
-     
+    
+    
+    
+    def theclient (self):
+        sess = session.DropboxSession (APP_KEY, APP_SECRET, ACCESS_TYPE)
+        sess = self.handle_oauth (sess)
+        return client.DropboxClient (sess)
+    
+    def handle_oauth (self, sess):
+        """ Retrieve OAUTH token & secret 
+        or retrieve new ones if required.
+    """
+        request_token = sess.obtain_request_token()
+        url = sess.build_authorize_url(request_token)
+
+        # This will fail if the user didn't visit
+        # the above URL and hit 'Allow'
+        #return sess.obtain_access_token(request_token)
+        #return sess.obtain_access_token(url)  
+        
+        
+        
+        sess = session.DropboxSession('l7jq','otpmc', 'dropbox')
+        request_token = sess.obtain_request_token()
+        url = sess.build_authorize_url(request_token)
+        #console.clear()
+        webbrowser.open(url)
+        return request_token
+        
+        
+        
+        
