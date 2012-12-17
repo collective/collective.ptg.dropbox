@@ -23,7 +23,7 @@ _ = MessageFactory('collective.ptg.dropbox')
 from dropbox import client, rest, session
 
 # Might need some of these, not sure yet
-import urllib2, urllib, commands, dircache, os, struct, time
+import urllib2, urllib, commands, dircache, os, struct, time, keychain
 
 import webbrowser
 import pickle
@@ -155,7 +155,7 @@ class DropboxAdapter(BaseAdapter):
     def retrieve_images(self):
         """list files in remote directory"""
         
-        dropbox_client = get_client()
+        dropbox_client = self.get_client()
         
         #resp = client.metadata(self.current_path)
         path = dropbox_client.metadata(self.current_path)
@@ -174,7 +174,7 @@ class DropboxAdapter(BaseAdapter):
         return filelist
         
         
-    def get_request_token():
+    def get_request_token(self):
         console.clear()
         sess = session.DropboxSession(app_key, app_secret, access_type)
         request_token = sess.obtain_request_token()
@@ -183,20 +183,20 @@ class DropboxAdapter(BaseAdapter):
         webbrowser.open(url, modal=True)
         return request_token
      
-    def get_access_token():
+    def get_access_token(self):
         token_str = keychain.get_password('dropbox', app_key)
         if token_str:
             key, secret = pickle.loads(token_str)
             return session.OAuthToken(key, secret)
-        request_token = get_request_token()
+        request_token = self.get_request_token()
         sess = session.DropboxSession(app_key, app_secret, access_type)
         access_token = sess.obtain_access_token(request_token)
         token_str = pickle.dumps((access_token.key, access_token.secret))
         keychain.set_password('dropbox', app_key, token_str)
         return access_token
      
-    def get_client():
-        access_token = get_access_token()
+    def get_client(self):
+        access_token = self.get_access_token()
         sess = session.DropboxSession(app_key, app_secret, access_type)
         sess.set_token(access_token.key, access_token.secret)
         dropbox_client = client.DropboxClient(sess)
