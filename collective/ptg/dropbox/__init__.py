@@ -42,14 +42,15 @@ import logging
 from urllib import urlencode, quote
 import urllib2
 import cookielib
+import keychain
 
 
 # Get your app key and secret from the Dropbox developer website
-APP_KEY = 'APP_SECRET'
-APP_SECRET = 'APP_SECRET'
+APP_KEY = 'l8fqxygy25xq7jq'
+APP_SECRET = 'otpc22qrc0gy7mc'
 
 # ACCESS_TYPE should be 'dropbox' or 'app_folder' as configured for your app
-ACCESS_TYPE = 'dropbox'
+ACCESS_TYPE = 'app_folder'
 
 
 def add_condition():
@@ -177,16 +178,17 @@ class DropboxAdapter(BaseAdapter):
         return  DropboxAPI(API_KEY)
 
     def retrieve_images(self):
-        """list files in remote directory"""
-        
-        dropbox_client = self.get_client()
+        """list files in remote directory http://dl.dropbox.com/u/57194316/index.xml"""
+        #access_token = self.get_access_token()
+        sess = session.DropboxSession(APP_KEY,APP_SECRET, ACCESS_TYPE)
+        #sess.set_token(access_token.key, access_token.secret)
+        dropbox_client = client.DropboxClient(sess)
         
         #resp = client.metadata('/')
-        path = dropbox_client.metadata('/')
+        meta = dropbox_client.metadata('/')
         
         #path='https://dl.dropbox.com/sh/1294vo0qreb8iad/tZIay8d54h'
         
-        meta = client.metadata(path)
         filelist = []
 
         for item in meta['contents']:
@@ -200,7 +202,8 @@ class DropboxAdapter(BaseAdapter):
         
     def get_request_token(self):
         #console.clear()
-        sess = session.DropboxSession('APP_KEY','APP_SECRET', 'dropbox')
+        sess = session.DropboxSession(APP_KEY,APP_SECRET, ACCESS_TYPE)
+        request_token = None
         request_token = sess.obtain_request_token()
         url = sess.build_authorize_url(request_token)
         #console.clear()
@@ -210,11 +213,12 @@ class DropboxAdapter(BaseAdapter):
      
     def get_access_token(self):
         #token_str = keychain.get_password('dropbox', app_key)
+        token_str = None
         if token_str:
             key, secret = pickle.loads(token_str)
             return session.OAuthToken(key, secret)
         request_token = self.get_request_token()
-        sess = session.DropboxSession('APP_KEY','APP_SECRET', 'dropbox')
+        sess = session.DropboxSession(APP_KEY,APP_SECRET, ACCESS_TYPE)
         access_token = sess.obtain_access_token(request_token)
         token_str = pickle.dumps((access_token.key, access_token.secret))
         #keychain.set_password('dropbox', app_key, token_str)
@@ -222,7 +226,7 @@ class DropboxAdapter(BaseAdapter):
      
     def get_client(self):
         access_token = self.get_access_token()
-        sess = session.DropboxSession('APP_KEY','APP_SECRET', 'dropbox')
+        sess = session.DropboxSession(APP_KEY,APP_SECRET, ACCESS_TYPE)
         sess.set_token(access_token.key, access_token.secret)
         dropbox_client = client.DropboxClient(sess)
         return dropbox_client
@@ -241,7 +245,7 @@ class DropboxAdapter(BaseAdapter):
     
     
     def theclient (self):
-        sess = session.DropboxSession ('APP_KEY','APP_SECRET', 'dropbox')
+        sess = session.DropboxSession (APP_KEY,APP_SECRET, ACCESS_TYPE)
         sess = self.handle_oauth (sess)
         return client.DropboxClient (sess)
     
@@ -259,7 +263,7 @@ class DropboxAdapter(BaseAdapter):
         
         
         
-        sess = session.DropboxSession('APP_KEY','APP_SECRET', 'dropbox')
+        sess = session.DropboxSession(APP_KEY,APP_SECRET, ACCESS_TYPE)
         request_token = sess.obtain_request_token()
         url = sess.build_authorize_url(request_token)
         webbrowser.open(url)
