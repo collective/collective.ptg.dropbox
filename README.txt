@@ -1,6 +1,6 @@
 Features
 --------
-* Droppbox Support!
+* Trying to get Droppbox Support for collective.plonetruegallery
 
 
 Coding Contributions

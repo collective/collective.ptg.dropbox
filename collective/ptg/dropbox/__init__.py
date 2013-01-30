@@ -42,7 +42,7 @@ import logging
 from urllib import urlencode, quote
 import urllib2
 import cookielib
-import keychain
+#import keychain
 
 
 # Get your app key and secret from the Dropbox developer website
